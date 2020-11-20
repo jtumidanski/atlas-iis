@@ -30,6 +30,7 @@ public class ItemDataProcessor {
    protected Map<Integer, Map<String, Integer>> equipStatsCache = new HashMap<>();
    protected Map<Integer, Integer> equipMaxLevelCache = new HashMap<>();
    protected Map<Integer, MapleData> equipLevelInfoCache = new HashMap<>();
+   protected Map<Integer, String> equipmentSlotCache = new HashMap<>();
 
    public static ItemDataProcessor getInstance() {
       ItemDataProcessor result = instance;
@@ -192,5 +193,15 @@ public class ItemDataProcessor {
       return getItemData(itemId)
             .map(data -> data.getChildByPath("info/level"))
             .map(data -> data.getChildByPath("info"));
+   }
+
+   public Optional<String> getEquipmentSlot(int itemId) {
+      return getCacheableThing(itemId, equipmentSlotCache, this::supplyEquipmentSlot);
+   }
+
+   protected Optional<String> supplyEquipmentSlot(Integer internalItemId) {
+      return getItemData(internalItemId)
+            .map(item -> item.getChildByPath("info"))
+            .map(info -> MapleDataTool.getString("islot", info, ""));
    }
 }
