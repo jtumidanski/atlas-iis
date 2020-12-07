@@ -103,19 +103,19 @@ public class ItemDataProcessor {
    protected Map<String, Integer> getEquipmentStatisticsMap(MapleData info) {
       Map<String, Integer> ret = info.children().stream()
             .filter(data -> data.name().startsWith("inc"))
-            .collect(Collectors.toMap(data -> data.name().substring(3), MapleDataTool::getIntConvert));
-      ret.put("reqJob", MapleDataTool.getInt("reqJob", info, 0));
-      ret.put("reqLevel", MapleDataTool.getInt("reqLevel", info, 0));
-      ret.put("reqDEX", MapleDataTool.getInt("reqDEX", info, 0));
-      ret.put("reqSTR", MapleDataTool.getInt("reqSTR", info, 0));
-      ret.put("reqINT", MapleDataTool.getInt("reqINT", info, 0));
-      ret.put("reqLUK", MapleDataTool.getInt("reqLUK", info, 0));
-      ret.put("reqPOP", MapleDataTool.getInt("reqPOP", info, 0));
-      ret.put("cash", MapleDataTool.getInt("cash", info, 0));
-      ret.put("tuc", MapleDataTool.getInt("tuc", info, 0));
-      ret.put("cursed", MapleDataTool.getInt("cursed", info, 0));
-      ret.put("success", MapleDataTool.getInt("success", info, 0));
-      ret.put("fs", MapleDataTool.getInt("fs", info, 0));
+            .collect(Collectors.toMap(data -> data.name().substring(3), data -> MapleDataTool.getIntConvert(data).orElse(0)));
+      ret.put("reqJob", MapleDataTool.getInteger("reqJob", info).orElse(0));
+      ret.put("reqLevel", MapleDataTool.getInteger("reqLevel", info).orElse(0));
+      ret.put("reqDEX", MapleDataTool.getInteger("reqDEX", info).orElse(0));
+      ret.put("reqSTR", MapleDataTool.getInteger("reqSTR", info).orElse(0));
+      ret.put("reqINT", MapleDataTool.getInteger("reqINT", info).orElse(0));
+      ret.put("reqLUK", MapleDataTool.getInteger("reqLUK", info).orElse(0));
+      ret.put("reqPOP", MapleDataTool.getInteger("reqPOP", info).orElse(0));
+      ret.put("cash", MapleDataTool.getInteger("cash", info).orElse(0));
+      ret.put("tuc", MapleDataTool.getInteger("tuc", info).orElse(0));
+      ret.put("cursed", MapleDataTool.getInteger("cursed", info).orElse(0));
+      ret.put("success", MapleDataTool.getInteger("success", info).orElse(0));
+      ret.put("fs", MapleDataTool.getInteger("fs", info).orElse(0));
       return ret;
    }
 
@@ -199,6 +199,6 @@ public class ItemDataProcessor {
    protected Optional<String> supplyEquipmentSlot(Integer internalItemId) {
       return getItemData(internalItemId)
             .flatMap(item -> item.childByPath("info"))
-            .map(info -> MapleDataTool.getString("islot", info, ""));
+            .flatMap(info -> MapleDataTool.getString("islot", info));
    }
 }
