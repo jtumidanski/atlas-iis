@@ -68,25 +68,22 @@ public class ItemDataProcessor {
    protected Optional<MapleData> getItemData(int itemId) {
       String idStr = "0" + itemId;
 
-      MapleDataDirectoryEntry root = itemData.getRoot();
-      for (MapleDataDirectoryEntry topDir : root.getSubdirectories()) {
-         for (MapleDataFileEntry iFile : topDir.getFiles()) {
-            if (iFile.getName().equals(idStr.substring(0, 4) + ".img")) {
-               MapleData ret = itemData.getData(topDir.getName() + "/" + iFile.getName());
-               if (ret == null) {
-                  return Optional.empty();
-               }
-               return Optional.of(ret.getChildByPath(idStr));
-            } else if (iFile.getName().equals(idStr.substring(1) + ".img")) {
-               return Optional.of(itemData.getData(topDir.getName() + "/" + iFile.getName()));
+      MapleDataDirectoryEntry root = itemData.root();
+      for (MapleDataDirectoryEntry topDir : root.subdirectories()) {
+         for (MapleDataFileEntry iFile : topDir.files()) {
+            if (iFile.name().equals(idStr.substring(0, 4) + ".img")) {
+               return itemData.data(topDir.name() + "/" + iFile.name())
+                     .flatMap(data -> data.childByPath(idStr));
+            } else if (iFile.name().equals(idStr.substring(1) + ".img")) {
+               return itemData.data(topDir.name() + "/" + iFile.name());
             }
          }
       }
-      root = equipData.getRoot();
-      for (MapleDataDirectoryEntry topDir : root.getSubdirectories()) {
-         for (MapleDataFileEntry iFile : topDir.getFiles()) {
-            if (iFile.getName().equals(idStr + ".img")) {
-               return Optional.of(equipData.getData(topDir.getName() + "/" + iFile.getName()));
+      root = equipData.root();
+      for (MapleDataDirectoryEntry topDir : root.subdirectories()) {
+         for (MapleDataFileEntry iFile : topDir.files()) {
+            if (iFile.name().equals(idStr + ".img")) {
+               return equipData.data(topDir.name() + "/" + iFile.name());
             }
          }
       }
@@ -99,14 +96,14 @@ public class ItemDataProcessor {
 
    protected Optional<Map<String, Integer>> supplyEquipmentStatistics(Integer internalItemId) {
       return getItemData(internalItemId)
-            .map(item -> item.getChildByPath("info"))
+            .flatMap(item -> item.childByPath("info"))
             .map(this::getEquipmentStatisticsMap);
    }
 
    protected Map<String, Integer> getEquipmentStatisticsMap(MapleData info) {
-      Map<String, Integer> ret = info.getChildren().stream()
-            .filter(data -> data.getName().startsWith("inc"))
-            .collect(Collectors.toMap(data -> data.getName().substring(3), MapleDataTool::getIntConvert));
+      Map<String, Integer> ret = info.children().stream()
+            .filter(data -> data.name().startsWith("inc"))
+            .collect(Collectors.toMap(data -> data.name().substring(3), MapleDataTool::getIntConvert));
       ret.put("reqJob", MapleDataTool.getInt("reqJob", info, 0));
       ret.put("reqLevel", MapleDataTool.getInt("reqLevel", info, 0));
       ret.put("reqDEX", MapleDataTool.getInt("reqDEX", info, 0));
@@ -166,8 +163,8 @@ public class ItemDataProcessor {
 
    protected boolean childExistsAndHasMultipleChildren(MapleData data, int index) {
       String path = Integer.toString(index);
-      MapleData child = data.getChildByPath(path);
-      return child != null && child.getChildren().size() > 1;
+      Optional<MapleData> child = data.childByPath(path);
+      return child.isPresent() && child.get().children().size() > 1;
    }
 
    protected Optional<Integer> supplyEquipLevel(int itemId, boolean getMaxLevel) {
@@ -179,8 +176,8 @@ public class ItemDataProcessor {
                .map(Long::intValue);
       } else {
          return getEquipLevelInfo(itemId)
-               .map(data -> data.getChildByPath("1"))
-               .filter(data -> data.getChildren().size() > 1)
+               .flatMap(data -> data.childByPath("1"))
+               .filter(data -> data.children().size() > 1)
                .map(data -> 2);
       }
    }
@@ -191,8 +188,8 @@ public class ItemDataProcessor {
 
    private Optional<MapleData> supplyEquipLevelInfo(int itemId) {
       return getItemData(itemId)
-            .map(data -> data.getChildByPath("info/level"))
-            .map(data -> data.getChildByPath("info"));
+            .flatMap(data -> data.childByPath("info/level"))
+            .flatMap(data -> data.childByPath("info"));
    }
 
    public Optional<String> getEquipmentSlot(int itemId) {
@@ -201,7 +198,7 @@ public class ItemDataProcessor {
 
    protected Optional<String> supplyEquipmentSlot(Integer internalItemId) {
       return getItemData(internalItemId)
-            .map(item -> item.getChildByPath("info"))
+            .flatMap(item -> item.childByPath("info"))
             .map(info -> MapleDataTool.getString("islot", info, ""));
    }
 }
