@@ -23,14 +23,14 @@ public class ItemDataProcessor {
 
    private static volatile ItemDataProcessor instance;
 
-   protected MapleDataProvider itemData;
+   protected final MapleDataProvider itemData;
 
-   protected MapleDataProvider equipData;
+   protected final MapleDataProvider equipData;
 
-   protected Map<Integer, Map<String, Integer>> equipStatsCache = new HashMap<>();
-   protected Map<Integer, Integer> equipMaxLevelCache = new HashMap<>();
-   protected Map<Integer, MapleData> equipLevelInfoCache = new HashMap<>();
-   protected Map<Integer, String> equipmentSlotCache = new HashMap<>();
+   protected final Map<Integer, Map<String, Integer>> equipStatsCache = new HashMap<>();
+   protected final Map<Integer, Integer> equipMaxLevelCache = new HashMap<>();
+   protected final Map<Integer, MapleData> equipLevelInfoCache = new HashMap<>();
+   protected final Map<Integer, String> equipmentSlotCache = new HashMap<>();
 
    public static ItemDataProcessor getInstance() {
       ItemDataProcessor result = instance;

@@ -4,7 +4,7 @@ import com.app.common.builder.RecordBuilder;
 import com.atlas.iis.model.Equipment;
 
 public class EquipmentBuilder extends RecordBuilder<Equipment, EquipmentBuilder> {
-   private int equipmentId;
+   private final int equipmentId;
 
    private int strength;
 
