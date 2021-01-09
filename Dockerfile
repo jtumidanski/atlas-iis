@@ -13,7 +13,7 @@ COPY iis-api/src iis-api/src
 COPY iis-model/src iis-model/src
 COPY iis-base/src iis-base/src
 
-RUN mvn install
+RUN mvn install -Prunnable
 
 FROM openjdk:14-ea-jdk-alpine
 USER root
