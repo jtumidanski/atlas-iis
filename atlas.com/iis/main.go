@@ -1,21 +1,27 @@
 package main
 
 import (
+	"atlas-iis/logger"
 	"atlas-iis/rest"
 	"atlas-iis/wz"
-	"log"
+	"context"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 )
 
 func main() {
-	l := log.New(os.Stdout, "iis ", log.LstdFlags|log.Lmicroseconds)
+	l := logger.CreateLogger()
+	l.Infoln("Starting main service.")
+
+	wg := &sync.WaitGroup{}
+	ctx, cancel := context.WithCancel(context.Background())
 
 	wzDir := os.Getenv("WZ_DIR")
 	wz.GetFileCache().Init(wzDir)
 
-	createRestService(l)
+	rest.CreateRestService(l, ctx, wg)
 
 	// trap sigterm or interrupt and gracefully shutdown the server
 	c := make(chan os.Signal, 1)
@@ -23,10 +29,8 @@ func main() {
 
 	// Block until a signal is received.
 	sig := <-c
-	l.Println("[INFO] shutting down via signal:", sig)
-}
-
-func createRestService(l *log.Logger) {
-	rs := rest.NewServer(l)
-	go rs.Run()
+	l.Infof("Initiating shutdown with signal %s.", sig)
+	cancel()
+	wg.Wait()
+	l.Infoln("Service shutdown.")
 }

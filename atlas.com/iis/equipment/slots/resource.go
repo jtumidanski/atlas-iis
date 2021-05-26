@@ -3,6 +3,7 @@ package slots
 import (
 	json2 "atlas-iis/rest/json"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,12 +14,12 @@ type GenericError struct {
 	Message string `json:"message"`
 }
 
-func GetEquipmentSlots(l *log.Logger) http.HandlerFunc {
+func GetEquipmentSlots(l logrus.FieldLogger) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ei := getEquipmentId(r)
 		e, err := GetEquipmentSlotCache().GetEquipmentSlot(ei)
 		if err != nil {
-			l.Println("[ERROR] deserializing instruction", err)
+			l.WithError(err).Errorln("Deserializing instruction", err)
 			rw.WriteHeader(http.StatusBadRequest)
 			json2.ToJSON(&GenericError{Message: err.Error()}, rw)
 			return
