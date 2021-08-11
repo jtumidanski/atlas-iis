@@ -36,13 +36,13 @@ func (i *Node) GetShort(name string, def uint16) uint16 {
 	return def
 }
 
-func (i *Node) GetString(name string) string {
+func (i *Node) GetString(name string, def string) string {
 	for _, c := range i.StringNodes {
 		if c.Name == name {
 			return c.Value
 		}
 	}
-	return ""
+	return def
 }
 
 type IntegerNode struct {

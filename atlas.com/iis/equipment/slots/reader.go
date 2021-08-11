@@ -38,7 +38,7 @@ func getEquipmentFromInfo(itemId uint32, exml *xml.Node) (*EquipmentSlot, error)
 		return &EquipmentSlot{itemId: itemId}, nil
 	}
 
-	slotStr := info.GetString("islot")
+	slotStr := info.GetString("islot", "")
 
 	return &EquipmentSlot{
 		itemId: itemId,
