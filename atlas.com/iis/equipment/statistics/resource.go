@@ -1,7 +1,7 @@
 package statistics
 
 import (
-	json2 "atlas-iis/rest/json"
+	"atlas-iis/json"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -21,7 +21,7 @@ func GetEquipmentStatistics(l logrus.FieldLogger) http.HandlerFunc {
 		if err != nil {
 			l.WithError(err).Errorln("Deserializing instruction", err)
 			rw.WriteHeader(http.StatusBadRequest)
-			json2.ToJSON(&GenericError{Message: err.Error()}, rw)
+			json.ToJSON(&GenericError{Message: err.Error()}, rw)
 			return
 		}
 
@@ -48,7 +48,7 @@ func GetEquipmentStatistics(l logrus.FieldLogger) http.HandlerFunc {
 				},
 			}}
 		rw.WriteHeader(http.StatusOK)
-		json2.ToJSON(result, rw)
+		json.ToJSON(result, rw)
 	}
 }
 
