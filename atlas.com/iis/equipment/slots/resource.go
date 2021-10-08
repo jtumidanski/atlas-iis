@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+func InitResource(router *mux.Router, l logrus.FieldLogger) {
+	eRouter := router.PathPrefix("/equipment").Subrouter()
+	eRouter.HandleFunc("/{equipmentId}/slots", GetEquipmentSlots(l)).Methods(http.MethodGet)
+}
+
 // GenericError is a generic error message returned by a server
 type GenericError struct {
 	Message string `json:"message"`

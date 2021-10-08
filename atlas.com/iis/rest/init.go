@@ -1,8 +1,6 @@
 package rest
 
 import (
-	"atlas-iis/equipment/slots"
-	"atlas-iis/equipment/statistics"
 	"context"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -10,17 +8,21 @@ import (
 	"sync"
 )
 
-func CreateRestService(l *logrus.Logger, ctx context.Context, wg *sync.WaitGroup) {
-	go NewServer(l, ctx, wg, ProduceRoutes)
+type RouteInitializer func(*mux.Router, logrus.FieldLogger)
+
+func CreateService(l *logrus.Logger, ctx context.Context, wg *sync.WaitGroup, basePath string, initializers ...RouteInitializer) {
+	go NewServer(l, ctx, wg, ProduceRoutes(basePath, initializers...))
 }
 
-func ProduceRoutes(l logrus.FieldLogger) http.Handler {
-		router := mux.NewRouter().PathPrefix("/ms/iis").Subrouter()
+func ProduceRoutes(basePath string, initializers ...RouteInitializer) func(l logrus.FieldLogger) http.Handler {
+	return func(l logrus.FieldLogger) http.Handler {
+		router := mux.NewRouter().PathPrefix(basePath).Subrouter().StrictSlash(true)
 		router.Use(CommonHeader)
 
-		eRouter := router.PathPrefix("/equipment").Subrouter()
-		eRouter.HandleFunc("/{equipmentId}", statistics.GetEquipmentStatistics(l)).Methods(http.MethodGet)
-		eRouter.HandleFunc("/{equipmentId}/slots", slots.GetEquipmentSlots(l)).Methods(http.MethodGet)
+		for _, initializer := range initializers {
+			initializer(router, l)
+		}
 
 		return router
+	}
 }
