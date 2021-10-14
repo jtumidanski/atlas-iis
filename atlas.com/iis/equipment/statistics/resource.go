@@ -2,67 +2,84 @@ package statistics
 
 import (
 	"atlas-iis/json"
+	"atlas-iis/rest"
+	"atlas-iis/rest/resource"
 	"github.com/gorilla/mux"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	"log"
 	"net/http"
 	"strconv"
 )
 
+const (
+	getEquipmentStatistics = "get_equipment_statistics"
+)
+
 func InitResource(router *mux.Router, l logrus.FieldLogger) {
-	eRouter := router.PathPrefix("/equipment").Subrouter()
-	eRouter.HandleFunc("/{equipmentId}", GetEquipmentStatistics(l)).Methods(http.MethodGet)
+	r := router.PathPrefix("/equipment").Subrouter()
+	r.HandleFunc("/{equipmentId}", registerGetEquipmentStatistics(l)).Methods(http.MethodGet)
 }
 
-// GenericError is a generic error message returned by a server
-type GenericError struct {
-	Message string `json:"message"`
-}
+type equipmentIdHandler func(equipmentId uint32) http.HandlerFunc
 
-func GetEquipmentStatistics(l logrus.FieldLogger) http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
-		ei := getEquipmentId(r)
-		e, err := GetEquipmentCache().GetEquipment(ei)
+func parseEquipmentId(l logrus.FieldLogger, next equipmentIdHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		value, err := strconv.Atoi(vars["equipmentId"])
 		if err != nil {
-			l.WithError(err).Errorln("Deserializing instruction", err)
-			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&GenericError{Message: err.Error()}, rw)
+			l.WithError(err).Errorf("Error parsing characterId as uint32")
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		result := EquipmentStatisticsDataContainer{
-			Data: EquipmentStatisticsData{
-				Id:   strconv.Itoa(int(e.itemId)),
-				Type: "com.atlas.iis.attribute.EquipmentAttributes",
-				Attributes: EquipmentStatisticsAttributes{
-					Strength:      e.strength,
-					Dexterity:     e.dexterity,
-					Intelligence:  e.intelligence,
-					Luck:          e.luck,
-					HP:            e.hp,
-					MP:            e.mp,
-					WeaponAttack:  e.weaponAttack,
-					MagicAttack:   e.magicAttack,
-					WeaponDefense: e.weaponDefense,
-					MagicDefense:  e.magicDefense,
-					Accuracy:      e.accuracy,
-					Avoidability:  e.avoidability,
-					Speed:         e.speed,
-					Jump:          e.jump,
-					Slots:         e.slots,
-				},
-			}}
-		rw.WriteHeader(http.StatusOK)
-		json.ToJSON(result, rw)
+		next(uint32(value))(w, r)
 	}
 }
 
-func getEquipmentId(r *http.Request) uint32 {
-	vars := mux.Vars(r)
-	value, err := strconv.Atoi(vars["equipmentId"])
-	if err != nil {
-		log.Println("Error parsing characterId as uint32")
-		return 0
+func registerGetEquipmentStatistics(l logrus.FieldLogger) http.HandlerFunc {
+	return rest.RetrieveSpan(getEquipmentStatistics, func(span opentracing.Span) http.HandlerFunc {
+		return parseEquipmentId(l, func(equipmentId uint32) http.HandlerFunc {
+			return handleGetEquipmentStatistics(l)(span)(equipmentId)
+		})
+	})
+}
+
+func handleGetEquipmentStatistics(l logrus.FieldLogger) func(span opentracing.Span) func(equipmentId uint32) http.HandlerFunc {
+	return func(span opentracing.Span) func(equipmentId uint32) http.HandlerFunc {
+		return func(equipmentId uint32) http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				e, err := GetEquipmentCache().GetEquipment(equipmentId)
+				if err != nil {
+					l.WithError(err).Errorln("Deserializing instruction", err)
+					w.WriteHeader(http.StatusBadRequest)
+					json.ToJSON(&resource.GenericError{Message: err.Error()}, w)
+					return
+				}
+
+				result := EquipmentStatisticsDataContainer{
+					Data: EquipmentStatisticsData{
+						Id:   strconv.Itoa(int(e.itemId)),
+						Type: "com.atlas.iis.attribute.EquipmentAttributes",
+						Attributes: EquipmentStatisticsAttributes{
+							Strength:      e.strength,
+							Dexterity:     e.dexterity,
+							Intelligence:  e.intelligence,
+							Luck:          e.luck,
+							HP:            e.hp,
+							MP:            e.mp,
+							WeaponAttack:  e.weaponAttack,
+							MagicAttack:   e.magicAttack,
+							WeaponDefense: e.weaponDefense,
+							MagicDefense:  e.magicDefense,
+							Accuracy:      e.accuracy,
+							Avoidability:  e.avoidability,
+							Speed:         e.speed,
+							Jump:          e.jump,
+							Slots:         e.slots,
+						},
+					}}
+				w.WriteHeader(http.StatusOK)
+				json.ToJSON(result, w)
+			}
+		}
 	}
-	return uint32(value)
 }
