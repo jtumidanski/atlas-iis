@@ -36,6 +36,19 @@ func (i *Node) GetShort(name string, def uint16) uint16 {
 	return def
 }
 
+func (i *Node) GetBool(name string, def bool) bool {
+	for _, c := range i.IntegerNodes {
+		if c.Name == name {
+			res, err := strconv.ParseUint(c.Value, 10, 16)
+			if err != nil {
+				return def
+			}
+			return res == 1
+		}
+	}
+	return def
+}
+
 func (i *Node) GetString(name string, def string) string {
 	for _, c := range i.StringNodes {
 		if c.Name == name {

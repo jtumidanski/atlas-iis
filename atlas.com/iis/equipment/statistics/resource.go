@@ -75,6 +75,7 @@ func handleGetEquipmentStatistics(l logrus.FieldLogger) func(span opentracing.Sp
 							Speed:         e.speed,
 							Jump:          e.jump,
 							Slots:         e.slots,
+							Cash:          e.cash,
 						},
 					}}
 				w.WriteHeader(http.StatusOK)

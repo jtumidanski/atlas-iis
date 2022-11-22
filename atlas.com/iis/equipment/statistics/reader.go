@@ -55,6 +55,7 @@ func getEquipmentFromInfo(itemId uint32, exml *xml.Node) (*Equipment, error) {
 		hp:            info.GetShort("incMHP", 0),
 		mp:            info.GetShort("incMMP", 0),
 		slots:         info.GetShort("tuc", 0),
+		cash:          info.GetBool("cash", false),
 	}, nil
 }
 

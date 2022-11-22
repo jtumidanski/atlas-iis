@@ -17,4 +17,5 @@ type Equipment struct {
 	hp            uint16
 	mp            uint16
 	slots         uint16
+	cash          bool
 }
